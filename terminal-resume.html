@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enea Meta | Infrastructure Engineer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --terminal-green: #00ff41;
+            --terminal-green-dim: #00cc33;
+            --terminal-bg: #0a0a0a;
+            --terminal-border: #1a1a1a;
+            --scanline-opacity: 0.03;
+            --glow-intensity: 0 0 10px rgba(0, 255, 65, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background: var(--terminal-bg);
+            color: var(--terminal-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .crt-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 50%, #1a1a1a 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 
+                0 0 0 4px #2a2a2a,
+                0 0 0 8px #1a1a1a,
+                0 0 60px rgba(0, 255, 65, 0.1),
+                inset 0 0 100px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .crt-container::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            pointer-events: none;
+        }
+
+        .terminal {
+            width: 100%;
+            height: 100%;
+            background: var(--terminal-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .terminal::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .terminal-header {
+            background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .btn-close { background: #ff5f56; }
+        .btn-minimize { background: #ffbd2e; }
+        .btn-maximize { background: #27ca3f; }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .terminal-body {
+            height: calc(100% - 45px);
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb:hover {
+            background: var(--terminal-green-dim);
+        }
+
+        .output-line {
+            margin-bottom: 4px;
+            line-height: 1.6;
+            font-size: 13px;
+            opacity: 0;
+            animation: fadeIn 0.05s forwards;
+            text-shadow: var(--glow-intensity);
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .prompt {
+            color: #00ff41;
+        }
+
+        .prompt-user {
+            color: #00ccff;
+        }
+
+        .prompt-at {
+            color: #888;
+        }
+
+        .prompt-host {
+            color: #ff6b6b;
+        }
+
+        .prompt-path {
+            color: #ffd93d;
+        }
+
+        .command {
+            color: #fff;
+        }
+
+        .section-header {
+            color: #00ffff;
+            font-weight: 600;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px dashed #00ffff44;
+            padding-bottom: 5px;
+        }
+
+        .highlight {
+            color: #ffd93d;
+        }
+
+        .success {
+            color: #27ca3f;
+        }
+
+        .info {
+            color: #00ccff;
+        }
+
+        .dim {
+            color: #666;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .input-prompt {
+            white-space: nowrap;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            flex: 1;
+            outline: none;
+            caret-color: var(--terminal-green);
+            text-shadow: var(--glow-intensity);
+            margin-left: 8px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: var(--terminal-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .ascii-art {
+            color: var(--terminal-green);
+            font-size: 10px;
+            line-height: 1.2;
+            white-space: pre;
+            margin: 10px 0;
+        }
+
+        .bullet {
+            color: #ff6b6b;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+        }
+
+        .typing-indicator span {
+            animation: typing-dot 1.4s infinite;
+            opacity: 0;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing-dot {
+            0%, 60%, 100% { opacity: 0; }
+            30% { opacity: 1; }
+        }
+
+        .help-cmd {
+            color: #00ff41;
+            display: inline-block;
+            width: 120px;
+        }
+
+        .help-desc {
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .crt-container {
+                padding: 15px;
+                height: 95vh;
+                border-radius: 10px;
+            }
+            
+            .terminal-body {
+                padding: 15px;
+                font-size: 11px;
+            }
+            
+            .ascii-art {
+                font-size: 6px;
+            }
+            
+            #command-input {
+                font-size: 11px;
+            }
+        }
+
+        .flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        .link {
+            color: #00ccff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .link:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="crt-container">
+        <div class="terminal flicker">
+            <div class="terminal-header">
+                <div class="terminal-btn btn-close"></div>
+                <div class="terminal-btn btn-minimize"></div>
+                <div class="terminal-btn btn-maximize"></div>
+                <div class="terminal-title">enea@infrastructure ~ bash</div>
+            </div>
+            <div class="terminal-body" id="terminal-output">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const terminalOutput = document.getElementById('terminal-output');
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        const resumeData = {
+            name: "Enea Meta",
+            title: "Infrastructure Engineer",
+            location: "Chicago, IL",
+            phone: "(773) 344-6746",
+            email: "meta.enea@gmail.com",
+            linkedin: "linkedin.com/in/eneam",
+            
+            summary: `Senior Microsoft 365 / Entra ID Administrator with 10+ years of experience 
+supporting enterprise Microsoft and VMware environments. Specializes in identity 
+governance and messaging services, including Entra ID (Azure AD), Conditional Access, 
+MFA, RBAC, and Microsoft 365 administration. Proven record of strengthening security 
+and operational stability—reducing incidents by 25%, automating lifecycle management 
+for 8,000+ users, and maintaining 99.9% uptime.`,
+            
+            experience: [
+                {
+                    company: "Sinai Health System",
+                    location: "Chicago, IL",
+                    title: "Infrastructure Engineer",
+                    period: "October 2021 – Present",
+                    highlights: [
+                        "Manage enterprise Windows Server and VMware infrastructure for 8,000+ users with 99.9% uptime",
+                        "Deploy Microsoft Entra ID Password Protection eliminating weak passwords",
+                        "Design Conditional Access policies with geofencing enforcing MFA per NIST/Zero Trust",
+                        "Engineer PowerShell identity automation saving 1,200+ labor hours annually",
+                        "Reduce licensing costs by 35% via role-based multi-tier model",
+                        "Lead Exchange migration to Exchange Online maintaining hybrid connectivity",
+                        "Implement Microsoft Defender for Identity with real-time threat monitoring",
+                        "Provide Tier 3 support for AD, DNS, and virtualization in 24/7 on-call"
+                    ]
+                },
+                {
+                    company: "Sphera Solutions",
+                    location: "Chicago, IL", 
+                    title: "IT Service Desk 2 Analyst",
+                    period: "November 2019 – October 2021",
+                    highlights: [
+                        "Maintained 99.9% uptime for Desktop Central across 850+ systems",
+                        "Reduced onboarding time from 2 hours to 20 minutes via PowerShell automation",
+                        "Reduced phishing risk by 75% through security awareness initiative",
+                        "Led migration from Trend Micro to Microsoft Defender for Endpoint",
+                        "Supported ISO 27001 certification with control validations"
+                    ]
+                },
+                {
+                    company: "Oncallers",
+                    location: "Chicago, IL",
+                    title: "IT Technician",
+                    period: "November 2012 – May 2019",
+                    highlights: [
+                        "Technical Account Manager for 100+ enterprise clients with 95%+ SLA rate",
+                        "Resolved Tier 1-3 incidents with documented root cause analysis",
+                        "Systems administration across Windows, Linux, and macOS"
+                    ]
+                }
+            ],
+            
+            education: [
+                { school: "DePaul University", degree: "BS, Cybersecurity", year: "December 2023" },
+                { school: "Triton College", degree: "AS, Computer Science", year: "December 2023" }
+            ],
+            
+            certifications: [
+                "CompTIA Security+ (SY0-701)",
+                "Microsoft 365 Administrator (MS-102)",
+                "Microsoft Identity and Access Administrator (SC-300)",
+                "Microsoft Azure Fundamentals (AZ-900)",
+                "Microsoft 365 Fundamentals (MS-900)"
+            ],
+            
+            skills: {
+                "Identity & Access": ["Entra ID/Azure AD", "Conditional Access", "MFA", "RBAC", "SSO (SAML/OAuth/OIDC)"],
+                "Microsoft 365": ["Exchange Online/Hybrid", "Teams", "SharePoint", "OneDrive"],
+                "Infrastructure": ["Windows Server", "Active Directory", "DNS", "VMware vSphere", "Hyper-V"],
+                "Security Tools": ["Defender for Endpoint", "Defender for Identity", "SCCM", "SolarWinds"],
+                "Automation": ["PowerShell", "Python"],
+                "Compliance": ["ISO 27001", "NIST", "HIPAA", "ITIL"]
+            }
+        };
+
+        const asciiArt = `
+ ███████╗███╗   ██╗███████╗ █████╗     ███╗   ███╗███████╗████████╗ █████╗ 
+ ██╔════╝████╗  ██║██╔════╝██╔══██╗    ████╗ ████║██╔════╝╚══██╔══╝██╔══██╗
+ █████╗  ██╔██╗ ██║█████╗  ███████║    ██╔████╔██║█████╗     ██║   ███████║
+ ██╔══╝  ██║╚██╗██║██╔══╝  ██╔══██║    ██║╚██╔╝██║██╔══╝     ██║   ██╔══██║
+ ███████╗██║ ╚████║███████╗██║  ██║    ██║ ╚═╝ ██║███████╗   ██║   ██║  ██║
+ ╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
+`;
+
+        function createPrompt() {
+            return `<span class="prompt-user">enea</span><span class="prompt-at">@</span><span class="prompt-host">infrastructure</span>:<span class="prompt-path">~</span><span class="prompt">$</span>`;
+        }
+
+        function addLine(content, delay = 0) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'output-line';
+                    line.innerHTML = content;
+                    line.style.animationDelay = `${delay}ms`;
+                    terminalOutput.appendChild(line);
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                    resolve();
+                }, delay);
+            });
+        }
+
+        async function typeText(text, element, speed = 30) {
+            for (let i = 0; i < text.length; i++) {
+                element.textContent += text[i];
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+
+        async function showBoot() {
+            await addLine('<span class="dim">[    0.000000] Linux version 6.1.0-infrastructure</span>', 0);
+            await addLine('<span class="dim">[    0.000001] Command line: BOOT_IMAGE=/boot/vmlinuz root=/dev/sda1</span>', 50);
+            await addLine('<span class="dim">[    0.000002] Initializing cgroup subsys cpuset</span>', 100);
+            await addLine('<span class="success">[    OK    ]</span> Started Resume Loader Service', 200);
+            await addLine('<span class="success">[    OK    ]</span> Reached target Local File Systems', 300);
+            await addLine('<span class="success">[    OK    ]</span> Started Identity Management Service', 400);
+            await addLine('', 500);
+            await addLine(`<pre class="ascii-art">${asciiArt}</pre>`, 600);
+            await addLine('', 700);
+            await addLine('<span class="info">Infrastructure Engineer | Microsoft 365 | Entra ID | PowerShell</span>', 800);
+            await addLine('<span class="dim">────────────────────────────────────────────────────────────────────</span>', 900);
+            await addLine('', 950);
+            await addLine(`${createPrompt()} <span class="command">whoami --verbose</span>`, 1000);
+            await addLine('', 1100);
+            await showWhoami();
+            await addLine('', 1400);
+            await addLine(`<span class="highlight">Type 'help' for available commands</span>`, 1500);
+            await addLine('', 1600);
+            showInputLine();
+        }
+
+        async function showWhoami() {
+            await addLine(`<span class="highlight">Name:</span>     ${resumeData.name}`);
+            await addLine(`<span class="highlight">Role:</span>     ${resumeData.title}`);
+            await addLine(`<span class="highlight">Location:</span> ${resumeData.location}`);
+            await addLine(`<span class="highlight">Email:</span>    ${resumeData.email}`);
+            await addLine(`<span class="highlight">LinkedIn:</span> <span class="link">${resumeData.linkedin}</span>`);
+        }
+
+        function showInputLine() {
+            const inputLine = document.createElement('div');
+            inputLine.className = 'input-line';
+            inputLine.innerHTML = `
+                <span class="input-prompt">${createPrompt()}</span>
+                <input type="text" id="command-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+            `;
+            terminalOutput.appendChild(inputLine);
+            
+            const input = document.getElementById('command-input');
+            input.focus();
+            
+            input.addEventListener('keydown', handleKeyDown);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function handleKeyDown(e) {
+            const input = e.target;
+            
+            if (e.key === 'Enter') {
+                const command = input.value.trim().toLowerCase();
+                if (command) {
+                    commandHistory.push(command);
+                    historyIndex = commandHistory.length;
+                }
+                
+                input.parentElement.innerHTML = `${createPrompt()} <span class="command">${input.value}</span>`;
+                processCommand(command);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    input.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    input.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    input.value = '';
+                }
+            }
+        }
+
+        async function processCommand(cmd) {
+            await addLine('');
+            
+            const commands = {
+                'help': showHelp,
+                'about': showAbout,
+                'summary': showAbout,
+                'experience': showExperience,
+                'exp': showExperience,
+                'work': showExperience,
+                'education': showEducation,
+                'edu': showEducation,
+                'certifications': showCertifications,
+                'certs': showCertifications,
+                'skills': showSkills,
+                'contact': showContact,
+                'all': showAll,
+                'resume': showAll,
+                'clear': clearTerminal,
+                'cls': clearTerminal,
+                'whoami': showWhoami,
+                'neofetch': showNeofetch,
+                'download': downloadResume,
+                'ls': showLs,
+                'pwd': () => addLine('/home/enea/resume'),
+                'date': () => addLine(new Date().toString()),
+                'uname': () => addLine('Linux infrastructure 6.1.0 x86_64 GNU/Linux'),
+                'hostname': () => addLine('infrastructure.local'),
+                'echo': () => addLine(''),
+            };
+
+            if (cmd === '') {
+                showInputLine();
+                return;
+            }
+
+            const handler = commands[cmd];
+            if (handler) {
+                await handler();
+            } else {
+                await addLine(`<span class="bullet">bash:</span> ${cmd}: command not found`);
+                await addLine(`<span class="dim">Type 'help' for available commands</span>`);
+            }
+            
+            await addLine('');
+            showInputLine();
+        }
+
+        async function showHelp() {
+            await addLine('<span class="section-header">═══ AVAILABLE COMMANDS ═══</span>');
+            await addLine('<span class="help-cmd">about</span><span class="help-desc">Display professional summary</span>');
+            await addLine('<span class="help-cmd">experience</span><span class="help-desc">Show work history</span>');
+            await addLine('<span class="help-cmd">education</span><span class="help-desc">View academic background</span>');
+            await addLine('<span class="help-cmd">certifications</span><span class="help-desc">List professional certifications</span>');
+            await addLine('<span class="help-cmd">skills</span><span class="help-desc">Display technical skills</span>');
+            await addLine('<span class="help-cmd">contact</span><span class="help-desc">Get contact information</span>');
+            await addLine('<span class="help-cmd">all</span><span class="help-desc">Display complete resume</span>');
+            await addLine('<span class="help-cmd">neofetch</span><span class="help-desc">System-style info display</span>');
+            await addLine('<span class="help-cmd">clear</span><span class="help-desc">Clear terminal screen</span>');
+            await addLine('');
+            await addLine('<span class="dim">Shortcuts: exp, edu, certs, resume</span>');
+        }
+
+        async function showAbout() {
+            await addLine('<span class="section-header">═══ PROFESSIONAL SUMMARY ═══</span>');
+            const lines = resumeData.summary.split('\n');
+            for (const line of lines) {
+                await addLine(line.trim());
+            }
+        }
+
+        async function showExperience() {
+            await addLine('<span class="section-header">═══ PROFESSIONAL EXPERIENCE ═══</span>');
+            
+            for (const job of resumeData.experience) {
+                await addLine('');
+                await addLine(`<span class="highlight">${job.title}</span>`);
+                await addLine(`<span class="info">${job.company}</span> | ${job.location}`);
+                await addLine(`<span class="dim">${job.period}</span>`);
+                await addLine('');
+                for (const highlight of job.highlights) {
+                    await addLine(`  <span class="bullet">▸</span> ${highlight}`);
+                }
+            }
+        }
+
+        async function showEducation() {
+            await addLine('<span class="section-header">═══ EDUCATION ═══</span>');
+            for (const edu of resumeData.education) {
+                await addLine(`<span class="highlight">${edu.degree}</span>`);
+                await addLine(`<span class="info">${edu.school}</span> | <span class="dim">${edu.year}</span>`);
+                await addLine('');
+            }
+        }
+
+        async function showCertifications() {
+            await addLine('<span class="section-header">═══ CERTIFICATIONS ═══</span>');
+            for (const cert of resumeData.certifications) {
+                await addLine(`  <span class="success">✓</span> ${cert}`);
+            }
+        }
+
+        async function showSkills() {
+            await addLine('<span class="section-header">═══ TECHNICAL SKILLS ═══</span>');
+            for (const [category, skills] of Object.entries(resumeData.skills)) {
+                await addLine('');
+                await addLine(`<span class="highlight">${category}:</span>`);
+                await addLine(`  ${skills.join(' | ')}`);
+            }
+        }
+
+        async function showContact() {
+            await addLine('<span class="section-header">═══ CONTACT INFORMATION ═══</span>');
+            await addLine(`<span class="highlight">📧 Email:</span>    ${resumeData.email}`);
+            await addLine(`<span class="highlight">📱 Phone:</span>    ${resumeData.phone}`);
+            await addLine(`<span class="highlight">📍 Location:</span> ${resumeData.location}`);
+            await addLine(`<span class="highlight">🔗 LinkedIn:</span> <span class="link">${resumeData.linkedin}</span>`);
+        }
+
+        async function showAll() {
+            await showAbout();
+            await addLine('');
+            await showExperience();
+            await addLine('');
+            await showEducation();
+            await addLine('');
+            await showCertifications();
+            await addLine('');
+            await showSkills();
+            await addLine('');
+            await showContact();
+        }
+
+        async function showNeofetch() {
+            const neofetch = `
+<span class="info">       _,met\$\$\$\$\$gg.</span>          <span class="prompt-user">enea</span>@<span class="prompt-host">infrastructure</span>
+<span class="info">    ,g\$\$\$\$\$\$\$\$\$\$\$\$\$\$\$P.</span>       ─────────────────────
+<span class="info">  ,g\$\$P"     """Y\$\$.".</span>       <span class="highlight">OS:</span> Infrastructure Linux x86_64
+<span class="info"> ,\$\$P'              \`\$\$\$.</span>      <span class="highlight">Host:</span> Sinai Health System
+<span class="info">',\$\$P       ,ggs.     \`\$\$b:</span>    <span class="highlight">Kernel:</span> 10+ years experience
+<span class="info">\`d\$\$'     ,\$P"'   .    \$\$\$</span>     <span class="highlight">Uptime:</span> 99.9%
+<span class="info"> \$\$P      d\$'     ,    \$\$P</span>     <span class="highlight">Packages:</span> 5 certifications
+<span class="info"> \$\$:      \$\$.   -    ,d\$\$'</span>     <span class="highlight">Shell:</span> PowerShell/Bash
+<span class="info"> \$\$;      Y\$b._   _,d\$P'</span>      <span class="highlight">DE:</span> Microsoft 365 Admin
+<span class="info"> Y\$\$.    \`.\`"Y\$\$\$\$P"'</span>         <span class="highlight">WM:</span> VMware vSphere
+<span class="info"> \`\$\$b      "-.__</span>              <span class="highlight">Terminal:</span> Windows Terminal
+<span class="info">  \`Y\$\$</span>                        <span class="highlight">CPU:</span> Identity & Access Mgmt
+<span class="info">   \`Y\$\$.</span>                      <span class="highlight">Memory:</span> 8000+ users managed
+<span class="info">     \`\$\$b.</span>                    <span class="highlight">Disk:</span> Exchange Online/Hybrid
+<span class="info">       \`Y\$\$b.</span>
+<span class="info">          \`"Y\$b._</span>
+<span class="info">              \`""</span>`;
+            await addLine(`<pre>${neofetch}</pre>`);
+        }
+
+        async function showLs() {
+            await addLine('<span class="info">drwxr-xr-x</span>  <span class="dim">enea enea</span>  4096  <span class="highlight">experience/</span>');
+            await addLine('<span class="info">drwxr-xr-x</span>  <span class="dim">enea enea</span>  4096  <span class="highlight">education/</span>');
+            await addLine('<span class="info">drwxr-xr-x</span>  <span class="dim">enea enea</span>  4096  <span class="highlight">certifications/</span>');
+            await addLine('<span class="info">-rw-r--r--</span>  <span class="dim">enea enea</span>  2048  <span class="success">README.md</span>');
+            await addLine('<span class="info">-rw-r--r--</span>  <span class="dim">enea enea</span>  4096  <span class="success">skills.json</span>');
+            await addLine('<span class="info">-rw-r--r--</span>  <span class="dim">enea enea</span>  1024  <span class="success">contact.txt</span>');
+        }
+
+        async function downloadResume() {
+            await addLine('<span class="dim">Generating PDF...</span>');
+            await addLine('<span class="success">✓</span> Resume available at: <span class="link">enea-meta-resume.pdf</span>');
+            await addLine('<span class="dim">Tip: Contact me directly at meta.enea@gmail.com</span>');
+        }
+
+        function clearTerminal() {
+            terminalOutput.innerHTML = '';
+            return Promise.resolve();
+        }
+
+        // Click anywhere to focus input
+        document.addEventListener('click', () => {
+            const input = document.getElementById('command-input');
+            if (input) input.focus();
+        });
+
+        // Start the terminal
+        showBoot();
+    </script>
+</body>
+</html>
