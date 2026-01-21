@@ -5,5 +5,5 @@ name: terminal-resume
          repo: eneameta/enea-resume
          branch: main
        source_dir: /
-       index_document: terminal-resume.html
+       index_document: index.html
        output_dir: /
