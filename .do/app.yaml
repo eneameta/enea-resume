@@ -1,9 +1,9 @@
-name: enea-resume
+name: terminal-resume
    static_sites:
      - name: web
        github:
          repo: eneameta/enea-resume
          branch: main
        source_dir: /
-       index_document: index.html
+       index_document: terminal-resume.html
        output_dir: /
