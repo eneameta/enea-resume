@@ -575,7 +575,6 @@ for 8,000+ users, and maintaining 99.9% uptime.`,
                 'uname': () => addLine('Linux infrastructure 6.1.0 x86_64 GNU/Linux'),
                 'hostname': () => addLine('infrastructure.local'),
                 'echo': () => addLine(''),
-                [atob('bG9yZW5h')]: showSecret,
             };
 
             if (cmd === '') {
@@ -715,26 +714,6 @@ for 8,000+ users, and maintaining 99.9% uptime.`,
             await addLine('<span class="dim">Generating PDF...</span>');
             await addLine('<span class="success">✓</span> Resume available at: <span class="link">enea-meta-resume.pdf</span>');
             await addLine('<span class="dim">Tip: Contact me directly at meta.enea@gmail.com</span>');
-        }
-
-        async function showSecret() {
-            const h = [9829];
-            const s = String.fromCharCode(...h);
-            const art = `
-<span style="color: #ff6b6b;">
-     ${s}${s}${s}     ${s}${s}${s}
-   ${s}${s}${s}${s}${s}${s}${s} ${s}${s}${s}${s}${s}${s}${s}
-  ${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}
-  ${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}
-   ${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}
-     ${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}${s}
-       ${s}${s}${s}${s}${s}${s}${s}
-         ${s}${s}${s}
-          ${s}
-</span>`;
-            await addLine(`<pre>${art}</pre>`);
-            const msg = atob('8J+SlSBJIGxvdmUgeW91LCBMb3JlbmEg8J+SlQ==');
-            await addLine(`<span style="color: #ff6b6b; font-size: 16px; text-shadow: 0 0 10px #ff6b6b;">${msg}</span>`);
         }
 
         function clearTerminal() {
